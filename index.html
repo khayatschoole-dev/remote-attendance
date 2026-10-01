@@ -201,6 +201,18 @@ main{padding-top:40px}
 </style>
 </head>
 <body>
+<section id="gate" class="hide">
+  <header class="bar"><h1>الغياب عن بعد<small>مدرسة الشيخ عبدالله خياط المتوسطة</small></h1></header>
+  <main>
+    <div class="panel"><h2>رمز الدخول</h2>
+      <p class="note" style="margin-top:0">يُطلب الرمز مرة واحدة فقط على هذا الجهاز. احصل عليه من وكيل شؤون الطلاب.</p>
+      <input class="t" id="gCode" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">
+      <button class="btn full" id="gGo">متابعة</button>
+      <div class="err" id="gErr"></div>
+    </div>
+  </main>
+</section>
+
 <section id="pick" class="hide">
   <header class="bar"><h1>الغياب عن بعد<small>مدرسة الشيخ عبدالله خياط المتوسطة</small></h1></header>
   <main>
@@ -249,7 +261,7 @@ function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Ri
 function dayName(d){return DAYS[new Date(d+'T12:00:00').getDay()]}
 function hijri(d){try{return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn',{day:'numeric',month:'long',year:'numeric'}).format(new Date(d+'T12:00:00'))}catch(e){return d}}
 function sortClasses(a,b){const [ga,sa]=a.split(' - '),[gb,sb]=b.split(' - ');return GRADES.indexOf(ga)-GRADES.indexOf(gb)||(+sa)-(+sb)}
-function show(id){['pick','setup','roll'].forEach(s=>$('#'+s).classList.toggle('hide',s!==id));window.scrollTo(0,0)}
+function show(id){['gate','pick','setup','roll'].forEach(s=>$('#'+s).classList.toggle('hide',s!==id));window.scrollTo(0,0)}
 
 async function api(path,{method='GET',body,prefer,range}={}){
   const h={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
@@ -364,8 +376,19 @@ async function submit(cls,studs,rows){
   }catch(e){ btn.disabled=false; btn.textContent='اعتماد'; toast('لم يُرسل: '+e.message) }
 }
 
-/* ---------- boot ---------- */
-if(TEACHER) openSetup(); else openPick();
+/* ---------- one-time device code ---------- */
+async function boot(){
+  let code=null;
+  try{ const r=await api('remote_settings?key=eq.access_code&select=value'); code=r[0]?.value||null }
+  catch(e){ show('gate'); $('#gErr').textContent='تعذّر الاتصال. تأكد من الإنترنت ثم أعد فتح التطبيق.'; return }
+  if(code && ls.get('ra_code','')===code){ return TEACHER?openSetup():openPick() }
+  show('gate'); $('#gCode').value='';
+  const go=()=>{ const v=$('#gCode').value.trim();
+    if(v!==code){ $('#gErr').textContent='الرمز غير صحيح.'; return }
+    ls.set('ra_code',v); $('#gErr').textContent=''; TEACHER?openSetup():openPick() };
+  $('#gGo').onclick=go; $('#gCode').onkeydown=e=>{ if(e.key==='Enter') go() };
+}
+boot();
 </script>
 </body>
 </html>
