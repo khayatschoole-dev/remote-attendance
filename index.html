@@ -377,13 +377,16 @@ async function submit(cls,studs,rows){
 }
 
 /* ---------- one-time device code ---------- */
+const normDigits=s=>String(s||'').replace(/[\u0660-\u0669]/g,c=>c.charCodeAt(0)-0x0660).replace(/[\u06F0-\u06F9]/g,c=>c.charCodeAt(0)-0x06F0).replace(/\s+/g,'');
+
 async function boot(){
   let code=null;
   try{ const r=await api('remote_settings?key=eq.access_code&select=value'); code=r[0]?.value||null }
   catch(e){ show('gate'); $('#gErr').textContent='تعذّر الاتصال. تأكد من الإنترنت ثم أعد فتح التطبيق.'; return }
+  code=normDigits(code);
   if(code && ls.get('ra_code','')===code){ return TEACHER?openSetup():openPick() }
   show('gate'); $('#gCode').value='';
-  const go=()=>{ const v=$('#gCode').value.trim();
+  const go=()=>{ const v=normDigits($('#gCode').value);
     if(v!==code){ $('#gErr').textContent='الرمز غير صحيح.'; return }
     ls.set('ra_code',v); $('#gErr').textContent=''; TEACHER?openSetup():openPick() };
   $('#gGo').onclick=go; $('#gCode').onkeydown=e=>{ if(e.key==='Enter') go() };
