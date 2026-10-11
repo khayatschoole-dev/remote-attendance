@@ -228,7 +228,7 @@ main{padding-top:40px}
 <section id="setup" class="hide">
   <header class="bar"><h1 id="hello">الغياب عن بعد<small id="helloSub"></small></h1><button class="iconbtn" id="changeMe">تغيير المعلم</button></header>
   <main>
-    <div id="closed" class="panel hide"><h2>اليوم ليس يوم دراسة عن بعد</h2><p class="note" style="margin:0">يفتح الرصد في الأيام التي تحددها الإدارة للدراسة عن بعد. إذا كان اليوم دراسة عن بعد فتواصل مع وكيل شؤون الطلاب.</p></div>
+    <div id="closed" class="panel hide"><h2>اليوم ليس يوم دراسة عن بعد</h2><p class="note" style="margin:0">يفتح الرصد يومي الأربعاء والخميس من كل أسبوع، وفي أيام الثلاثاء التي تحددها الإدارة للدراسة عن بعد. إذا كان اليوم دراسة عن بعد فتواصل مع وكيل شؤون الطلاب.</p></div>
     <div id="openBox">
       <div class="panel"><h2>الحصة</h2><div class="periods" id="periods"></div></div>
       <div class="panel"><h2>المادة</h2><select class="t" id="subject"></select></div>
@@ -309,7 +309,7 @@ async function openSetup(){
   const grid=$('#classGrid'); grid.innerHTML='<div class="loading">جاري التحميل…</div>';
   try{
     const [day,R,sess]=await Promise.all([api(`remote_days?vdate=eq.${D}&select=vdate`),roster(),api(`remote_sessions?vdate=eq.${D}&period=eq.${PERIOD}&select=class,teacher,absent_count`)]);
-    const isOpen=day.length>0;
+    const dow=new Date(D+'T12:00:00').getDay(); const isOpen=day.length>0 || dow===3 || dow===4;   // الأربعاء والخميس دائماً عن بعد
     $('#closed').classList.toggle('hide',isOpen); $('#openBox').classList.toggle('hide',!isOpen);
     if(!isOpen) return;
     const done=Object.fromEntries(sess.map(s=>[s.class,s]));
